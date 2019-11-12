@@ -10,11 +10,16 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MainVerticle extends AbstractVerticle {
     HttpServer server;
+    int client_counter = 0;
+    Map<Integer, Integer> message_counters = new HashMap();
+    Map<Integer, Map<Integer, String>> messages = new HashMap();
 
   @Override
   public void start(Future<Void> startFuture) {
@@ -44,16 +49,18 @@ public class MainVerticle extends AbstractVerticle {
   private void setRoutes(Router router) {
       // Get to root
       router.get("/").handler(req -> {
-          int client = 0;
+          client_counter++;
+          messages.put(client_counter, new HashMap<Integer, String>());
+          message_counters.put(client_counter, 0);
           JsonObject json = new JsonObject()
-                  .put("client", client)
+                  .put("client", client_counter)
                   .put("links", new JsonArray()
                           .add(new JsonObject()
                                   .put("href", "/board")
                                   .put("rel", "list")
                                   .put("method", "GET"))
                           .add(new JsonObject()
-                                  .put("href", "/board/" + client)
+                                  .put("href", "/board/" + client_counter)
                                   .put("rel", "create")
                                   .put("method", "POST")));
         req.response()
@@ -73,13 +80,34 @@ public class MainVerticle extends AbstractVerticle {
       // A client can create a message in the service
       router.post("/board/:client").handler(req -> {
           int client = Integer.parseInt(req.request().getParam("client"));
+          message_counters.put(client, message_counters.get(client) + 1);
+          int ID = message_counters.get(client);
           JsonObject req_json = req.getBodyAsJson();
           System.out.println(req_json.encodePrettily());
           String text = req_json.getString("text");
+          messages.get(client).put(ID, text);
+
+          // response
+          JsonObject res_json = req_json.copy();
+          res_json
+                  .put("ID", ID)
+                  .put("links", new JsonArray()
+                          .add(new JsonObject()
+                                  .put("href", "/board/" + client + "/" + ID)
+                                  .put("rel", "self")
+                                  .put("method", "GET"))
+                          .add(new JsonObject()
+                                  .put("href", "/board/" + client + "/" + ID)
+                                  .put("rel", "delete")
+                                  .put("method", "DELETE"))
+                          .add(new JsonObject()
+                                  .put("href", "/board/" + client + "/" + ID)
+                                  .put("rel", "edit")
+                                  .put("method", "PATCH")));
 
           req.response()
                   .putHeader("content-type", "application/json")
-                  .end(req_json.encode());
+                  .end(res_json.encode());
       });
 
       // A client can modify their own messages
