@@ -1,19 +1,18 @@
 package board;
 
-import io.netty.util.concurrent.Promise;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.StaticHandler;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class MainVerticle extends AbstractVerticle {
     HttpServer server;
@@ -49,6 +48,8 @@ public class MainVerticle extends AbstractVerticle {
   private void setRoutes(Router router) {
       // Get to root
       router.get("/").handler(req -> {
+          // SocketAddress remote = req.request().remoteAddress();
+          // System.out.println("remote " + remote);
           client_counter++;
           messages.put(client_counter, new HashMap<Integer, String>());
           message_counters.put(client_counter, 0);
@@ -71,7 +72,7 @@ public class MainVerticle extends AbstractVerticle {
       // A client can view all messages in the service
       router.get("/board").handler(req -> {
           JsonObject json = new JsonObject()
-                  .put("messages", new JsonArray()); // TODO: read the messages
+                  .put("messages", new JsonArray(getMessagesAsList()));
           req.response()
                   .putHeader("content-type", "application/json")
                   .end(json.encode());
@@ -83,7 +84,6 @@ public class MainVerticle extends AbstractVerticle {
           message_counters.put(client, message_counters.get(client) + 1);
           int ID = message_counters.get(client);
           JsonObject req_json = req.getBodyAsJson();
-          System.out.println(req_json.encodePrettily());
           String text = req_json.getString("text");
           messages.get(client).put(ID, text);
 
@@ -113,6 +113,24 @@ public class MainVerticle extends AbstractVerticle {
       // A client can modify their own messages
       // A client can delete their own messages
 
+  }
+
+  private List<JsonObject> getMessagesAsList() {
+      List<JsonObject> result = new LinkedList();
+      for (Map.Entry<Integer, Map<Integer, String>> entry: messages.entrySet()) {
+          Integer client = entry.getKey();
+          Map<Integer, String> id2text = entry.getValue();
+          for (Map.Entry<Integer, String> entryMsg: id2text.entrySet()) {
+              Integer ID = entryMsg.getKey();
+              String text = entryMsg.getValue();
+             result.add(new JsonObject()
+                     .put("client", client)
+                     .put("text", text)
+                     .put("ID", ID)
+             );
+          }
+      }
+      return result;
   }
 }
 
