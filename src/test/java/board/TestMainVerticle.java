@@ -7,6 +7,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import io.vertx.rxjava.ext.unit.TestContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,8 @@ public class TestMainVerticle {
                     assertEquals(response.result().bodyAsJsonObject().size(), 4);
                 }));
 
+        showAllMessages(testContext, client);
+
         // Edit a message
         req_json = new JsonObject()
                 .put("client", "1")
@@ -58,6 +61,29 @@ public class TestMainVerticle {
                     assertEquals(response.result().bodyAsJsonObject().size(), 4);
                 }));
 
+        showAllMessages(testContext, client);
+
+        // Delete a message
+        client.delete(8080, "::1", "/board/1/1")
+                .putHeader("Accept", "application/json")
+                .send(response -> testContext.verify(() -> {
+                    System.out.println("body delete\n" + response.result().bodyAsJsonObject().encodePrettily());
+                    assertEquals(200, response.result().statusCode());
+                    assertEquals(response.result().bodyAsJsonObject().size(), 3);
+                }));
+
+        showAllMessages(testContext, client);
+
+        // Try to delete same message again
+        client.delete(8080, "::1", "/board/1/1")
+                .putHeader("Accept", "application/json")
+                .send(response -> testContext.verify(() -> {
+                    assertEquals(404, response.result().statusCode());
+                    testContext.completeNow();
+                }));
+    }
+
+    private void showAllMessages(VertxTestContext testContext, WebClient client) {
         // Show all messages
         client.get(8080, "::1", "/board")
                 .putHeader("Accept", "application/json")
@@ -65,7 +91,6 @@ public class TestMainVerticle {
                     assertEquals(200, response.result().statusCode());
                     assertEquals(response.result().bodyAsJsonObject().size(), 1);
                     System.out.println("body list\n" + response.result().bodyAsJsonObject().encodePrettily());
-                    testContext.completeNow();
                 }));
     }
 }

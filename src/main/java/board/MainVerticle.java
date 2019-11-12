@@ -144,6 +144,32 @@ public class MainVerticle extends AbstractVerticle {
       });
 
       // A client can delete their own messages
+      router.delete("/board/:client/:ID").handler(req -> {
+          int client = Integer.parseInt(req.request().getParam("client"));
+          int ID = Integer.parseInt(req.request().getParam("ID"));
+
+          if (messages.get(client).containsKey(ID)) {
+              message_counters.put(client, message_counters.get(client) - 1);
+              String text = messages.get(client).remove(ID);
+
+              // response
+              JsonObject res_json = new JsonObject();
+              res_json
+                      .put("ID", ID)
+                      .put("text", text)
+                      .put("client", client);
+
+              req.response()
+                      .putHeader("content-type", "application/json")
+                      .end(res_json.encode());
+          }
+          else {
+              req.response()
+                      .putHeader("content-type", "application/json")
+                      .setStatusCode(404)
+                      .end();
+          }
+      });
 
   }
 

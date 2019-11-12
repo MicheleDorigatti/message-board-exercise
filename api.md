@@ -123,13 +123,6 @@ Content-Type: application/json
   "client" : <number>
   "text"   : <string>
   "id"     : <number>
-  "links"  : [
-    {
-      "href": "/board/<client>/<id>",
-      "rel": "self",
-      "method": "GET"
-    }
-]
 }
 
 401 Not authorized
