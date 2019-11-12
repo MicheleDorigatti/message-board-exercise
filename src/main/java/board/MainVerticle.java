@@ -111,6 +111,38 @@ public class MainVerticle extends AbstractVerticle {
       });
 
       // A client can modify their own messages
+      router.patch("/board/:client/:ID").handler(req -> {
+          int client = Integer.parseInt(req.request().getParam("client"));
+          int ID = Integer.parseInt(req.request().getParam("ID"));
+          JsonObject req_json = req.getBodyAsJson();
+          String text = req_json.getString("text");
+          String previous_text = messages.get(client).get(ID);
+          messages.get(client).put(ID, text);
+
+          // response - we return the previous text
+          JsonObject res_json = req_json.copy();
+          res_json
+                  .put("ID", ID)
+                  .put("text", previous_text)
+                  .put("links", new JsonArray()
+                          .add(new JsonObject()
+                                  .put("href", "/board/" + client + "/" + ID)
+                                  .put("rel", "self")
+                                  .put("method", "GET"))
+                          .add(new JsonObject()
+                                  .put("href", "/board/" + client + "/" + ID)
+                                  .put("rel", "delete")
+                                  .put("method", "DELETE"))
+                          .add(new JsonObject()
+                                  .put("href", "/board/" + client + "/" + ID)
+                                  .put("rel", "edit")
+                                  .put("method", "PATCH")));
+
+          req.response()
+                  .putHeader("content-type", "application/json")
+                  .end(res_json.encode());
+      });
+
       // A client can delete their own messages
 
   }

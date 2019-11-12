@@ -46,6 +46,18 @@ public class TestMainVerticle {
                     assertEquals(response.result().bodyAsJsonObject().size(), 4);
                 }));
 
+        // Edit a message
+        req_json = new JsonObject()
+                .put("client", "1")
+                .put("text", "An edited test message");
+        client.patch(8080, "::1", "/board/1/1")
+                .putHeader("Accept", "application/json")
+                .sendJsonObject(req_json, response -> testContext.verify(() -> {
+                    System.out.println("body\n" + response.result().bodyAsJsonObject().encodePrettily());
+                    assertEquals(200, response.result().statusCode());
+                    assertEquals(response.result().bodyAsJsonObject().size(), 4);
+                }));
+
         // Show all messages
         client.get(8080, "::1", "/board")
                 .putHeader("Accept", "application/json")
