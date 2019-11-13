@@ -88,7 +88,7 @@ public class MainVerticle extends AbstractVerticle {
           System.out.println("json client " + json_client);
           String text = req_json.getString("text");
 
-          if (json_client == client) {
+          if (json_client <= client_counter && json_client == client) {
               // Create the message
               message_counters.put(client, message_counters.get(client) + 1);
               int ID = message_counters.get(client);
@@ -124,10 +124,30 @@ public class MainVerticle extends AbstractVerticle {
 
       // A client can modify their own messages
       router.patch("/board/:client/:ID").handler(req -> {
+          // Process request
           int client = Integer.parseInt(req.request().getParam("client"));
           int ID = Integer.parseInt(req.request().getParam("ID"));
           JsonObject req_json = req.getBodyAsJson();
+          int json_client = req_json.getInteger("client");
           String text = req_json.getString("text");
+
+          // Check authorization
+          if (json_client > client_counter || client != json_client) {
+              req.response()
+                      .setStatusCode(401)
+                      .end();
+              return;
+          }
+
+          // Check if message exists
+          if (! messages.get(client).containsKey(ID)) {
+              req.response()
+                      .setStatusCode(404)
+                      .end();
+              return;
+          }
+
+          // Update message
           String previous_text = messages.get(client).get(ID);
           messages.get(client).put(ID, text);
 

@@ -61,14 +61,24 @@ public class TestMainVerticle {
 
         // Edit a message
         req_json = new JsonObject()
-                .put("client", "1")
+                .put("client", 1)
                 .put("text", "An edited test message");
         client.patch(8080, "::1", "/board/1/1")
                 .putHeader("Accept", "application/json")
                 .sendJsonObject(req_json, response -> testContext.verify(() -> {
-                    System.out.println("body\n" + response.result().bodyAsJsonObject().encodePrettily());
                     assertEquals(200, response.result().statusCode());
+                    System.out.println("body\n" + response.result().bodyAsJsonObject().encodePrettily());
                     assertEquals(response.result().bodyAsJsonObject().size(), 4);
+                }));
+
+        // Edit a non existing message
+        req_json = new JsonObject()
+                .put("client", 1)
+                .put("text", "An edited test message");
+        client.patch(8080, "::1", "/board/1/100")
+                .putHeader("Accept", "application/json")
+                .sendJsonObject(req_json, response -> testContext.verify(() -> {
+                    assertEquals(404, response.result().statusCode());
                 }));
 
         showAllMessages(testContext, client);
