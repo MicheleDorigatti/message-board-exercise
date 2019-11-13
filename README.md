@@ -2,7 +2,11 @@
 
 # Building
 
-Run gradle from the command line:
+Start the server:
 ```
-./gradlew clean run
+./gradlew clean run &
+```
+Launch the tests:
+```
+./gradlew test
 ```
