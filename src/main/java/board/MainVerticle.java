@@ -177,8 +177,19 @@ public class MainVerticle extends AbstractVerticle {
 
       // A client can delete their own messages
       router.delete("/board/:client/:ID").handler(req -> {
+          // Process request
           int client = Integer.parseInt(req.request().getParam("client"));
           int ID = Integer.parseInt(req.request().getParam("ID"));
+          JsonObject req_json = req.getBodyAsJson();
+          int json_client = req_json.getInteger("client");
+
+          // Check authorization
+          if (json_client > client_counter || client != json_client) {
+              req.response()
+                      .setStatusCode(401)
+                      .end();
+              return;
+          }
 
           if (messages.get(client).containsKey(ID)) {
               message_counters.put(client, message_counters.get(client) - 1);

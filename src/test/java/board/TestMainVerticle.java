@@ -84,9 +84,11 @@ public class TestMainVerticle {
         showAllMessages(testContext, client);
 
         // Delete a message
+        req_json = new JsonObject()
+                .put("client", 1);
         client.delete(8080, "::1", "/board/1/1")
                 .putHeader("Accept", "application/json")
-                .send(response -> testContext.verify(() -> {
+                .sendJsonObject(req_json, response -> testContext.verify(() -> {
                     System.out.println("body delete\n" + response.result().bodyAsJsonObject().encodePrettily());
                     assertEquals(200, response.result().statusCode());
                     assertEquals(response.result().bodyAsJsonObject().size(), 3);
@@ -95,9 +97,11 @@ public class TestMainVerticle {
         showAllMessages(testContext, client);
 
         // Try to delete same message again
+        req_json = new JsonObject()
+                .put("client", 1);
         client.delete(8080, "::1", "/board/1/1")
                 .putHeader("Accept", "application/json")
-                .send(response -> testContext.verify(() -> {
+                .sendJsonObject(req_json, response -> testContext.verify(() -> {
                     assertEquals(404, response.result().statusCode());
                     testContext.completeNow();
                 }));
