@@ -4,9 +4,9 @@
 
 Start the server:
 ```
-./gradlew clean run &
+./gradlew clean run
 ```
-Launch the tests:
+In another shell launch the tests:
 ```
 ./gradlew test
 ```

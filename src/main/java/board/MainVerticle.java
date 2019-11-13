@@ -5,7 +5,6 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 
@@ -17,8 +16,8 @@ import java.util.Map;
 public class MainVerticle extends AbstractVerticle {
     HttpServer server;
     int client_counter = 0;
-    Map<Integer, Integer> message_counters = new HashMap();
-    Map<Integer, Map<Integer, String>> messages = new HashMap();
+    Map<Integer, Integer> message_counters = new HashMap<>();
+    Map<Integer, Map<Integer, String>> messages = new HashMap<>();
 
   @Override
   public void start(Future<Void> startFuture) {
@@ -48,10 +47,8 @@ public class MainVerticle extends AbstractVerticle {
   private void setRoutes(Router router) {
       // Get to root
       router.get("/").handler(req -> {
-          // SocketAddress remote = req.request().remoteAddress();
-          // System.out.println("remote " + remote);
           client_counter++;
-          messages.put(client_counter, new HashMap<Integer, String>());
+          messages.put(client_counter, new HashMap<>());
           message_counters.put(client_counter, 0);
           JsonObject json = new JsonObject()
                   .put("client", client_counter)
@@ -82,10 +79,8 @@ public class MainVerticle extends AbstractVerticle {
       router.post("/board/:client").handler(req -> {
           // Process request
           int client = Integer.parseInt(req.request().getParam("client"));
-          System.out.println("url client " + client);
           JsonObject req_json = req.getBodyAsJson();
           int json_client = req_json.getInteger("client");
-          System.out.println("json client " + json_client);
           String text = req_json.getString("text");
 
           if (json_client <= client_counter && json_client == client) {
@@ -217,7 +212,7 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   private List<JsonObject> getMessagesAsList() {
-      List<JsonObject> result = new LinkedList();
+      List<JsonObject> result = new LinkedList<>();
       for (Map.Entry<Integer, Map<Integer, String>> entry: messages.entrySet()) {
           Integer client = entry.getKey();
           Map<Integer, String> id2text = entry.getValue();
