@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TestMainVerticle {
 
     @Test
-    @DisplayName("Create a message and list all messages")
+    @DisplayName("Use all available API")
     @Timeout(value = 10, timeUnit = TimeUnit.SECONDS)
     void test(Vertx vertx, VertxTestContext testContext) {
         WebClient client = WebClient.create(vertx);
@@ -53,6 +53,12 @@ public class TestMainVerticle {
                 }));
 
         showAllMessages(testContext, client);
+
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // Edit a message
         req_json = new JsonObject()
