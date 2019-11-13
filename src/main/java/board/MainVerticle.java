@@ -80,34 +80,46 @@ public class MainVerticle extends AbstractVerticle {
 
       // A client can create a message in the service
       router.post("/board/:client").handler(req -> {
+          // Process request
           int client = Integer.parseInt(req.request().getParam("client"));
-          message_counters.put(client, message_counters.get(client) + 1);
-          int ID = message_counters.get(client);
+          System.out.println("url client " + client);
           JsonObject req_json = req.getBodyAsJson();
+          int json_client = req_json.getInteger("client");
+          System.out.println("json client " + json_client);
           String text = req_json.getString("text");
-          messages.get(client).put(ID, text);
 
-          // response
-          JsonObject res_json = req_json.copy();
-          res_json
-                  .put("ID", ID)
-                  .put("links", new JsonArray()
-                          .add(new JsonObject()
-                                  .put("href", "/board/" + client + "/" + ID)
-                                  .put("rel", "self")
-                                  .put("method", "GET"))
-                          .add(new JsonObject()
-                                  .put("href", "/board/" + client + "/" + ID)
-                                  .put("rel", "delete")
-                                  .put("method", "DELETE"))
-                          .add(new JsonObject()
-                                  .put("href", "/board/" + client + "/" + ID)
-                                  .put("rel", "edit")
-                                  .put("method", "PATCH")));
+          if (json_client == client) {
+              // Create the message
+              message_counters.put(client, message_counters.get(client) + 1);
+              int ID = message_counters.get(client);
+              messages.get(client).put(ID, text);
 
-          req.response()
-                  .putHeader("content-type", "application/json")
-                  .end(res_json.encode());
+              // response
+              JsonObject res_json = req_json.copy();
+              res_json
+                      .put("ID", ID)
+                      .put("links", new JsonArray()
+                              .add(new JsonObject()
+                                      .put("href", "/board/" + client + "/" + ID)
+                                      .put("rel", "self")
+                                      .put("method", "GET"))
+                              .add(new JsonObject()
+                                      .put("href", "/board/" + client + "/" + ID)
+                                      .put("rel", "delete")
+                                      .put("method", "DELETE"))
+                              .add(new JsonObject()
+                                      .put("href", "/board/" + client + "/" + ID)
+                                      .put("rel", "edit")
+                                      .put("method", "PATCH")));
+
+              req.response()
+                      .putHeader("content-type", "application/json")
+                      .end(res_json.encode());
+          } else {
+              req.response()
+                      .setStatusCode(401)
+                      .end();
+          }
       });
 
       // A client can modify their own messages

@@ -37,14 +37,24 @@ public class TestMainVerticle {
 
         // Create a message
         JsonObject req_json = new JsonObject()
-                .put("client", "1")
+                .put("client", 1)
                 .put("text", "A test message");
         client.post(8080, "::1", "/board/1")
                 .putHeader("Accept", "application/json")
                 .sendJsonObject(req_json, response -> testContext.verify(() -> {
-                    System.out.println("body\n" + response.result().bodyAsJsonObject().encodePrettily());
                     assertEquals(200, response.result().statusCode());
+                    System.out.println("body\n" + response.result().bodyAsJsonObject().encodePrettily());
                     assertEquals(response.result().bodyAsJsonObject().size(), 4);
+                }));
+
+        // Try to create a message for another user
+        req_json = new JsonObject()
+                .put("client", 1)
+                .put("text", "A test message");
+        client.post(8080, "::1", "/board/2")
+                .putHeader("Accept", "application/json")
+                .sendJsonObject(req_json, response -> testContext.verify(() -> {
+                    assertEquals(401, response.result().statusCode());
                 }));
 
         showAllMessages(testContext, client);
